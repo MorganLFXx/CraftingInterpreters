@@ -13,6 +13,8 @@ abstract class Expr
         R visitLiteralExpr(Literal expr);
 
         R visitUnaryExpr(Unary expr);
+
+        R visitThreeWayExpr(ThreeWay expr);
     }
 
     static class Binary extends Expr
@@ -82,6 +84,28 @@ abstract class Expr
         }
 
         final Token operator;
+        final Expr right;
+    }
+
+    static class ThreeWay extends Expr
+    {
+        ThreeWay(Expr judge, Token operator, Expr left, Expr right)
+        {
+            this.judge = judge;
+            this.operator = operator;
+            this.left = left;
+            this.right = right;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor)
+        {
+            return visitor.visitThreeWayExpr(this);
+        }
+
+        final Expr judge;
+        final Token operator;
+        final Expr left;
         final Expr right;
     }
 

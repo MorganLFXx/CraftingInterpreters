@@ -17,7 +17,8 @@ public class GenerateAst
         String outputDir = args[0];
         defineAst(outputDir, "Expr",
                 Arrays.asList("Binary   : Expr left, Token operator, Expr right", "Grouping : Expr expression",
-                        "Literal  : Object value", "Unary    : Token operator, Expr right"));
+                        "Literal  : Object value", "Unary    : Token operator, Expr right",
+                        "ThreeWay : Expr judge, Token operator, Expr left, Expr right"));
     }
 
     private static void defineAst(String outputDir, String baseName, List<String> types) throws IOException
@@ -82,8 +83,7 @@ public class GenerateAst
         writer.println();
         writer.println("    @Override");
         writer.println("    <R> R accept(Visitor<R> visitor) {");
-        writer.println("      return visitor.visit" +
-                className + baseName + "(this);");
+        writer.println("      return visitor.visit" + className + baseName + "(this);");
         writer.println("    }");
 
         // Fields.

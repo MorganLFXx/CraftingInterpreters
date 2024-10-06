@@ -29,14 +29,33 @@ class Parser
         }
     }
 
-    private Expr expression()
+    private Expr commaExpression()
     {
-        Expr expr = equality();
+        Expr expr = expression();
         while (match(COMMA))
         {
             Token operator = previous();
-            Expr right = equality();
+            Expr right = expression();
             expr = new Expr.Binary(expr, operator, right);
+        }
+        return expr;
+    }
+
+    private Expr expression()
+    {
+        return threeway();
+    }
+
+    private Expr threeway()
+    {
+        Expr expr = equality();
+        while (match(QUESTION))
+        {
+            Token operator = previous();
+            Expr left = threeway();
+            consume(COLON, "Expect ':' after '?'");
+            Expr right = threeway();
+            expr = new Expr.ThreeWay(expr, operator, left, right);
         }
         return expr;
     }

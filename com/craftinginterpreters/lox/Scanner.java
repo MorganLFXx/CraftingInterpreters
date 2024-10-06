@@ -129,6 +129,11 @@ class Scanner
                     addToken(SLASH);
                 }
                 break;
+            case '?':
+                addToken(QUESTION);
+                break;
+            case ':':
+                addToken(COLON);
             case ' ':
             case '\r':
             case '\t':
