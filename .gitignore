@@ -1,12 +1,12 @@
 /out/production/LoxInterpreter/.idea/.gitignore
 /out/production/LoxInterpreter/.idea/checkstyle-idea.xml
-/out/production/LoxInterpreter/com/craftinginterpreters/lox/Lox.class
+/out/production/LoxInterpreter/com/craftinginterpreters/lox/*.class
 /out/production/LoxInterpreter/.idea/LoxInterpreter.iml
 /out/production/LoxInterpreter/.idea/misc.xml
 /out/production/LoxInterpreter/.idea/modules.xml
-/out/production/LoxInterpreter/com/craftinginterpreters/lox/Scanner.class
-/out/production/LoxInterpreter/com/craftinginterpreters/lox/Token.class
-/out/production/LoxInterpreter/com/craftinginterpreters/lox/TokenType.class
 /out/production/LoxInterpreter/.idea/uiDesigner.xml
 /Test/test.txt
 /out/production/LoxInterpreter/.gitignore
+/.idea/codeStyles/codeStyleConfig.xml
+/out/production/LoxInterpreter/.idea/codeStyles/codeStyleConfig.xml
+/out/production/LoxInterpreter/com/craftinginterpreters/tool/GenerateAst.class
