@@ -8,3 +8,5 @@
 /out/production/LoxInterpreter/com/craftinginterpreters/lox/Token.class
 /out/production/LoxInterpreter/com/craftinginterpreters/lox/TokenType.class
 /out/production/LoxInterpreter/.idea/uiDesigner.xml
+/Test/test.txt
+/out/production/LoxInterpreter/.gitignore
