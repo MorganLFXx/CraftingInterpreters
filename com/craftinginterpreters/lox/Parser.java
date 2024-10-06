@@ -22,7 +22,7 @@ class Parser
     {
         try
         {
-            return expression();
+            return commaExpression();
         } catch (ParseError error)
         {
             return null;
