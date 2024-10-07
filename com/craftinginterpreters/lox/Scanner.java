@@ -134,6 +134,7 @@ class Scanner
                 break;
             case ':':
                 addToken(COLON);
+                break;
             case ' ':
             case '\r':
             case '\t':
@@ -169,7 +170,6 @@ class Scanner
         if (type == null)
             type = IDENTIFIER;
         addToken(type);
-        addToken(IDENTIFIER);
     }
 
     private void number()
