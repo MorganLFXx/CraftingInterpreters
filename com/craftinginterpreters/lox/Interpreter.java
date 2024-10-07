@@ -157,6 +157,8 @@ class Interpreter implements Expr.Visitor<Object>
                 return (double) left / (double) right;
             case STAR:
                 return (double) left * (double) right;
+            case COMMA:
+                return right;
         }
 
         // Unreachable.
