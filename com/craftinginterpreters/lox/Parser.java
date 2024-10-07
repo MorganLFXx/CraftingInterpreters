@@ -22,28 +22,29 @@ class Parser
     {
         try
         {
-            return commaExpression();
+            return expression();
         } catch (ParseError error)
         {
             return null;
         }
     }
 
-    private Expr commaExpression()
-    {
-        Expr expr = expression();
-        while (match(COMMA))
-        {
-            Token operator = previous();
-            Expr right = expression();
-            expr = new Expr.Binary(expr, operator, right);
-        }
-        return expr;
-    }
 
     private Expr expression()
     {
-        return threeway();
+        return commaExpression();
+    }
+
+    private Expr commaExpression()
+    {
+        Expr expr = threeway();
+        while (match(COMMA))
+        {
+            Token operator = previous();
+            Expr right = threeway();
+            expr = new Expr.Binary(expr, operator, right);
+        }
+        return expr;
     }
 
     private Expr threeway()
