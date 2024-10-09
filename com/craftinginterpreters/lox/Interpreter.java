@@ -5,6 +5,7 @@ import java.util.List;
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 {
     private Environment environment = new Environment();
+    private boolean isBroken = false;
 
     void interpret(List<Stmt> statements)
     {
@@ -41,6 +42,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 
             for (Stmt statement : statements)
             {
+                if (isBroken)
+                {
+                    isBroken = false;
+                    break;
+                }
                 execute(statement);
             }
         } finally
@@ -72,55 +78,30 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         return expr.accept(this);
     }
 
-    @Override
-    public Object visitLiteralExpr(Expr.Literal expr)
-    {
-        return expr.value;
-    }
 
     @Override
-    public Object visitUnaryExpr(Expr.Unary expr)
+    public Void visitIfStmt(Stmt.If stmt)
     {
-        Object right = evaluate(expr.right);
-        if (expr.right instanceof Expr.Variable)
-            checkVarIsInitialized((Expr.Variable) expr.right);
-
-        switch (expr.operator.type)
+        if (isTruthy(evaluate(stmt.condition)))
         {
-            case BANG:
-                return !isTruthy(right);
-            case MINUS:
-                checkNumberOperand(expr.operator, right);
-                return -(double) right;
+            execute(stmt.thenBranch);
+        } else if (stmt.elseBranch != null)
+        {
+            execute(stmt.elseBranch);
         }
-
-        // Unreachable.
-        assert (false);
         return null;
     }
 
     @Override
-    public Object visitVariableExpr(Expr.Variable expr)
+    public Void visitWhileStmt(Stmt.While stmt)
     {
-        return environment.get(expr.name);
-    }
-
-
-    @Override
-    public Object visitGroupingExpr(Expr.Grouping expr)
-    {
-        return evaluate(expr.expression);
-    }
-
-
-    @Override
-    public Void visitExpressionStmt(Stmt.Expression stmt)
-    {
-        Object value = evaluate(stmt.expression);
-        if (!Lox.isInFile)
-            System.out.println(stringify(value));
+        while (isTruthy(evaluate(stmt.condition)))
+        {
+            execute(stmt.body);
+        }
         return null;
     }
+
 
     @Override
     public Void visitPrintStmt(Stmt.Print stmt)
@@ -145,6 +126,54 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         return null;
     }
 
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt)
+    {
+        Object value = evaluate(stmt.expression);
+        if (!Lox.isInFile)
+            System.out.println(stringify(value));
+        return null;
+    }
+
+    @Override
+    public Object visitLiteralExpr(Expr.Literal expr)
+    {
+        return expr.value;
+    }
+
+    @Override
+    public Object visitLogicalExpr(Expr.Logical expr)
+    {
+        Object left = evaluate(expr.left);
+
+        if (expr.operator.type == TokenType.OR)
+        {
+            if (isTruthy(left))
+                return left;
+        } else
+        {
+            if (!isTruthy(left))
+                return left;
+        }
+
+        return evaluate(expr.right);
+    }
+
+
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr)
+    {
+        return environment.get(expr.name);
+    }
+
+
+    @Override
+    public Object visitGroupingExpr(Expr.Grouping expr)
+    {
+        return evaluate(expr.expression);
+    }
+
     @Override
     public Object visitAssignExpr(Expr.Assign expr)
     {
@@ -154,11 +183,31 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     }
 
     @Override
+    public Object visitUnaryExpr(Expr.Unary expr)
+    {
+        Object right = evaluate(expr.right);
+        if (expr.right instanceof Expr.Variable)
+            checkVarIsInitialized((Expr.Variable) expr.right);
+
+        switch (expr.operator.type)
+        {
+            case BANG:
+                return !isTruthy(right);
+            case MINUS:
+                checkNumberOperand(expr.operator, right);
+                return -(double) right;
+        }
+
+        // Unreachable.
+        assert (false);
+        return null;
+    }
+
+    @Override
     public Object visitBinaryExpr(Expr.Binary expr)
     {
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
-        checkVarIsInitialized((Expr.Variable) expr.left, (Expr.Variable) expr.right);
         if (expr.left instanceof Expr.Variable)
             checkVarIsInitialized((Expr.Variable) expr.left);
         if (expr.right instanceof Expr.Variable)
@@ -221,17 +270,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         return null;
     }
 
-    private void checkVarIsInitialized(Expr.Variable... vars)
-    {
-        for (Expr.Variable var : vars)
-        {
-            if (environment.get(var.name) == null)
-            {
-                throw new RuntimeError(var.name, "Uninitialized variable '" + var.name.lexeme + "'.");
-            }
-        }
-    }
-
     @Override
     public Object visitThreeWayExpr(Expr.ThreeWay expr)
     {
@@ -251,6 +289,15 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         else
             return right;
     }
+
+    private void checkVarIsInitialized(Expr.Variable var)
+    {
+        if (environment.get(var.name) == null)
+        {
+            throw new RuntimeError(var.name, "Uninitialized variable '" + var.name.lexeme + "'.");
+        }
+    }
+
 
     private void checkNumberOperand(Token operator, Object operand)
     {
