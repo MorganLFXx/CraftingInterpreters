@@ -1,11 +1,13 @@
 package com.craftinginterpreters.lox;
 
 import java.util.List;
+import java.util.Stack;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 {
     private Environment environment = new Environment();
     private boolean isBroken = false;
+    private final Stack<Boolean> isInLoop = new Stack<>();
 
     void interpret(List<Stmt> statements)
     {
@@ -43,10 +45,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
             for (Stmt statement : statements)
             {
                 if (isBroken)
-                {
-                    isBroken = false;
                     break;
-                }
                 execute(statement);
             }
         } finally
@@ -95,10 +94,22 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     @Override
     public Void visitWhileStmt(Stmt.While stmt)
     {
-        while (isTruthy(evaluate(stmt.condition)))
+        isInLoop.push(true);
+        while (isTruthy(evaluate(stmt.condition)) && !isBroken)
         {
             execute(stmt.body);
         }
+        isBroken = false;
+        isInLoop.pop();
+        return null;
+    }
+
+    @Override
+    public Void visitBreakStmt(Stmt.Break stmt)
+    {
+        if (isInLoop.isEmpty())
+            throw new RuntimeError(stmt.operator, "Break statement outside of loop.");
+        isBroken = true;
         return null;
     }
 

@@ -22,7 +22,7 @@ public class GenerateAst
                         "Variable : Token name", "ThreeWay : Expr judge, Token operator, Expr left, Expr right"));
         defineAst(outputDir, "Stmt", Arrays.asList("Block: List<Stmt> statements", "Expression : Expr expression",
                 "If: Expr condition, Stmt thenBranch," + " Stmt elseBranch", "Print: Expr expression",
-                "While: Expr condition, Stmt body", "Var: Token name, Expr initializer"));
+                "While: Expr condition, Stmt body", "Break:Token operator ", "Var: Token name, Expr initializer"));
     }
 
     private static void defineAst(String outputDir, String baseName, List<String> types) throws IOException
