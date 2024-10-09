@@ -82,7 +82,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     public Object visitUnaryExpr(Expr.Unary expr)
     {
         Object right = evaluate(expr.right);
-        checkVarIsInitialized((Expr.Variable) expr.right);
+        if (expr.right instanceof Expr.Variable)
+            checkVarIsInitialized((Expr.Variable) expr.right);
 
         switch (expr.operator.type)
         {
@@ -125,7 +126,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     public Void visitPrintStmt(Stmt.Print stmt)
     {
         Object value = evaluate(stmt.expression);
-        checkVarIsInitialized((Expr.Variable) stmt.expression);
+        if (stmt.expression instanceof Expr.Variable)
+            checkVarIsInitialized((Expr.Variable) stmt.expression);
         System.out.println(stringify(value));
         return null;
     }
@@ -157,6 +159,10 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
         checkVarIsInitialized((Expr.Variable) expr.left, (Expr.Variable) expr.right);
+        if (expr.left instanceof Expr.Variable)
+            checkVarIsInitialized((Expr.Variable) expr.left);
+        if (expr.right instanceof Expr.Variable)
+            checkVarIsInitialized((Expr.Variable) expr.right);
 
         switch (expr.operator.type)
         {
