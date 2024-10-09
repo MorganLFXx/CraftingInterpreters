@@ -239,7 +239,12 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
 
-        checkVarIsInitialized((Expr.Variable) expr.judge, (Expr.Variable) expr.left, (Expr.Variable) expr.right);
+        if (expr.judge instanceof Expr.Variable)
+            checkVarIsInitialized((Expr.Variable) expr.judge);
+        if (expr.left instanceof Expr.Variable)
+            checkVarIsInitialized((Expr.Variable) expr.left);
+        if (expr.right instanceof Expr.Variable)
+            checkVarIsInitialized((Expr.Variable) expr.right);
 
         if (isTruthy(judge))
             return left;
