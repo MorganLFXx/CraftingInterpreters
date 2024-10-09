@@ -5,7 +5,6 @@ import java.util.List;
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 {
     private Environment environment = new Environment();
-    private boolean isBroken = false;
 
     void interpret(List<Stmt> statements)
     {
@@ -42,11 +41,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 
             for (Stmt statement : statements)
             {
-                if (isBroken)
-                {
-                    isBroken = false;
-                    break;
-                }
                 execute(statement);
             }
         } finally
