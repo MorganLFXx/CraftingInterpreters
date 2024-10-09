@@ -13,6 +13,7 @@ public class Lox
     private static final Interpreter interpreter = new Interpreter();
     static boolean hadError = false;
     static boolean hadRuntimeError = false;
+    static boolean isInFile = false;
 
     public static void main(String[] args) throws IOException
     {
@@ -31,6 +32,7 @@ public class Lox
 
     private static void runFile(String path) throws IOException
     {
+        isInFile = true;
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
         // Indicate an error in the exit code.
@@ -42,6 +44,7 @@ public class Lox
 
     private static void runPrompt() throws IOException
     {
+        isInFile = false;
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 

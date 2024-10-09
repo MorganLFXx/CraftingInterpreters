@@ -82,6 +82,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     public Object visitUnaryExpr(Expr.Unary expr)
     {
         Object right = evaluate(expr.right);
+        checkVarIsInitialized((Expr.Variable) expr.right);
 
         switch (expr.operator.type)
         {
@@ -114,7 +115,9 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     @Override
     public Void visitExpressionStmt(Stmt.Expression stmt)
     {
-        evaluate(stmt.expression);
+        Object value = evaluate(stmt.expression);
+        if (!Lox.isInFile)
+            System.out.println(stringify(value));
         return null;
     }
 
@@ -122,6 +125,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     public Void visitPrintStmt(Stmt.Print stmt)
     {
         Object value = evaluate(stmt.expression);
+        checkVarIsInitialized((Expr.Variable) stmt.expression);
         System.out.println(stringify(value));
         return null;
     }
@@ -152,6 +156,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     {
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
+        checkVarIsInitialized((Expr.Variable) expr.left, (Expr.Variable) expr.right);
 
         switch (expr.operator.type)
         {
@@ -210,12 +215,26 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         return null;
     }
 
+    private void checkVarIsInitialized(Expr.Variable... vars)
+    {
+        for (Expr.Variable var : vars)
+        {
+            if (environment.get(var.name) == null)
+            {
+                throw new RuntimeError(var.name, "Uninitialized variable '" + var.name.lexeme + "'.");
+            }
+        }
+    }
+
     @Override
     public Object visitThreeWayExpr(Expr.ThreeWay expr)
     {
         Object judge = evaluate(expr.judge);
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
+
+        checkVarIsInitialized((Expr.Variable) expr.judge, (Expr.Variable) expr.left, (Expr.Variable) expr.right);
+
         if (isTruthy(judge))
             return left;
         else
