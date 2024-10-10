@@ -6,7 +6,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 {
     private Environment environment = new Environment();
     private boolean isBroken = false;
-    private final int isInLoop=0;
+    private int isInLoop = 0;
 
     void interpret(List<Stmt> statements)
     {
@@ -106,7 +106,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     @Override
     public Void visitBreakStmt(Stmt.Break stmt)
     {
-        if(isInLoop<=0)
+        if (isInLoop <= 0)
             throw new RuntimeError(stmt.operator, "Break statement outside of loop.");
         isBroken = true;
         return null;
