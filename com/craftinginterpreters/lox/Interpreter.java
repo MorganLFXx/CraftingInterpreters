@@ -5,6 +5,8 @@ import java.util.List;
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 {
     private Environment environment = new Environment();
+    private boolean isBroken = false;
+    private int isInLoop = 0;
 
     void interpret(List<Stmt> statements)
     {
@@ -38,14 +40,18 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         try
         {
             this.environment = environment;
+            isInLoop++;
 
             for (Stmt statement : statements)
             {
+                if (isBroken)
+                    break;
                 execute(statement);
             }
         } finally
         {
             this.environment = previous;
+            isInLoop--;
         }
     }
 
@@ -89,10 +95,20 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     @Override
     public Void visitWhileStmt(Stmt.While stmt)
     {
-        while (isTruthy(evaluate(stmt.condition)))
+        while (isTruthy(evaluate(stmt.condition)) && !isBroken)
         {
             execute(stmt.body);
         }
+        isBroken = false;
+        return null;
+    }
+
+    @Override
+    public Void visitBreakStmt(Stmt.Break stmt)
+    {
+        if (isInLoop <= 0)
+            throw new RuntimeError(stmt.operator, "Break statement outside of loop.");
+        isBroken = true;
         return null;
     }
 
