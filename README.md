@@ -56,4 +56,4 @@
 2. 同样地，只要我们的解释器支持一个重要的优化，循环也可以用这些工具来实现。它是什么？为什么它是必要的？请说出一种使用这种技术进行迭代的语言。
 
    递归？ Scheme语言通过递归实现循环   (查了下发现应该说是尾递归优化)
-3. support for "break;": 使用isBroken和isInLoop
+3. support for "break;": 使用isBroken和isInBlock完成break语句，实现的break语句只能在块中使用，会跳转直到遇到while
