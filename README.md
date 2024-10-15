@@ -57,3 +57,22 @@
 
    递归？ Scheme语言通过递归实现循环   (查了下发现应该说是尾递归优化)
 3. support for "break;": 使用isBroken和isInBlock完成break语句，实现的break语句只能在块中使用，会跳转直到遇到while
+
+## Chapter 10
+
+### Something interesting
+
+1. 由于解释器是树状的层层解释，函数的return语句需要一次想上跳多级，使用了Java的throw exception机制完好的覆盖了这一目的
+2. Stmt.function -> LoxFunction 从一些语法实体到被封装的可使用函数 interpreter is different
+3. 局部函数和闭包是好的想法吗？
+
+### Challenges
+
+1. Smalltalk没有实参数量检查的性能成本，why?
+
+   Smalltalk 的语言设计鼓励使用更灵活的方法来处理参数，其方法通常接收一个参数数组，而不是固定数量的参数
+2. Anonymous function of lambda TODO
+3. 函数参数到底在哪层作用域？
+   Lox的处理是将其放在和函数块内部同级
+   在大多数语言中，函数参数会被局部变量遮蔽
+   (在2024春编译原理实验的实现中，我将其放在比函数块内部高一级的作用域中)
