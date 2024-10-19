@@ -1,12 +1,15 @@
 package com.craftinginterpreters.lox;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 {
     final Environment globals = new Environment();
     private Environment environment = globals;
+    private final Map<Expr, Integer> locals = new HashMap<>();
     private boolean isBroken = false;
     private int isInBlock = 0;
 
@@ -47,6 +50,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         stmt.accept(this);
     }
 
+    void resolve(Expr expr, int depth)
+    {
+        locals.put(expr, depth); // depth 是当前作用域和变量定义的作用域之间的距离
+    }
+
     @Override
     public Void visitBlockStmt(Stmt.Block stmt)
     {
@@ -64,8 +72,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 
             for (Stmt statement : statements)
             {
-                if (isBroken)
-                    break;
+                if (isBroken) break;
                 execute(statement);
             }
         } finally
@@ -77,8 +84,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 
     private String stringify(Object object)
     {
-        if (object == null)
-            return "nil";
+        if (object == null) return "nil";
 
         if (object instanceof Double)
         {
@@ -126,8 +132,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     @Override
     public Void visitBreakStmt(Stmt.Break stmt)
     {
-        if (isInBlock <= 0)
-            throw new RuntimeError(stmt.operator, "Break statement outside of loop.");
+        if (isInBlock <= 0) throw new RuntimeError(stmt.operator, "Break statement outside of loop.");
         isBroken = true;
         return null;
     }
@@ -137,8 +142,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     public Void visitPrintStmt(Stmt.Print stmt)
     {
         Object value = evaluate(stmt.expression);
-        if (stmt.expression instanceof Expr.Variable)
-            checkVarIsInitialized((Expr.Variable) stmt.expression);
+        if (stmt.expression instanceof Expr.Variable) checkVarIsInitialized((Expr.Variable) stmt.expression);
         System.out.println(stringify(value));
         return null;
     }
@@ -169,8 +173,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     public Void visitExpressionStmt(Stmt.Expression stmt)
     {
         Object value = evaluate(stmt.expression);
-        if (!Lox.isInFile)
-            System.out.println(stringify(value));
+        if (!Lox.isInFile) System.out.println(stringify(value));
         return null;
     }
 
@@ -187,12 +190,10 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 
         if (expr.operator.type == TokenType.OR)
         {
-            if (isTruthy(left))
-                return left;
+            if (isTruthy(left)) return left;
         } else
         {
-            if (!isTruthy(left))
-                return left;
+            if (!isTruthy(left)) return left;
         }
 
         return evaluate(expr.right);
@@ -202,7 +203,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     @Override
     public Object visitVariableExpr(Expr.Variable expr)
     {
-        return environment.get(expr.name);
+        return lookUpVariable(expr.name, expr);
     }
 
 
@@ -216,7 +217,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     public Object visitAssignExpr(Expr.Assign expr)
     {
         Object value = evaluate(expr.value);
-        environment.assign(expr.name, value);
+        Integer distance = locals.get(expr);
+        if (distance != null)
+        {
+            environment.assignAt(distance, expr.name, value);
+        } else
+        {
+            globals.assign(expr.name, value);
+        }
         return value;
     }
 
@@ -239,7 +247,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         if (arguments.size() != function.arity())
         {
             throw new RuntimeError(expr.paren,
-                    "Expected " + function.arity() + " arguments but got " + arguments.size() + ".");
+                                   "Expected " + function.arity() + " arguments but got " + arguments.size() + ".");
         }
         return function.call(this, arguments);
     }
@@ -248,8 +256,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     public Void visitReturnStmt(Stmt.Return stmt)
     {
         Object value = null;
-        if (stmt.value != null)
-            value = evaluate(stmt.value);
+        if (stmt.value != null) value = evaluate(stmt.value);
 
         throw new Return(value);
     }
@@ -258,8 +265,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     public Object visitUnaryExpr(Expr.Unary expr)
     {
         Object right = evaluate(expr.right);
-        if (expr.right instanceof Expr.Variable)
-            checkVarIsInitialized((Expr.Variable) expr.right);
+        if (expr.right instanceof Expr.Variable) checkVarIsInitialized((Expr.Variable) expr.right);
 
         switch (expr.operator.type)
         {
@@ -280,10 +286,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     {
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
-        if (expr.left instanceof Expr.Variable)
-            checkVarIsInitialized((Expr.Variable) expr.left);
-        if (expr.right instanceof Expr.Variable)
-            checkVarIsInitialized((Expr.Variable) expr.right);
+        if (expr.left instanceof Expr.Variable) checkVarIsInitialized((Expr.Variable) expr.left);
+        if (expr.right instanceof Expr.Variable) checkVarIsInitialized((Expr.Variable) expr.right);
 
         switch (expr.operator.type)
         {
@@ -328,8 +332,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
                 }
                 throw new RuntimeError(expr.operator, "Operands must be two numbers or two strings.");
             case SLASH:
-                if ((double) right == 0)
-                    throw new RuntimeError(expr.operator, "Divide by zero.");
+                if ((double) right == 0) throw new RuntimeError(expr.operator, "Divide by zero.");
                 return (double) left / (double) right;
             case STAR:
                 return (double) left * (double) right;
@@ -349,18 +352,26 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
 
-        if (expr.judge instanceof Expr.Variable)
-            checkVarIsInitialized((Expr.Variable) expr.judge);
-        if (expr.left instanceof Expr.Variable)
-            checkVarIsInitialized((Expr.Variable) expr.left);
-        if (expr.right instanceof Expr.Variable)
-            checkVarIsInitialized((Expr.Variable) expr.right);
+        if (expr.judge instanceof Expr.Variable) checkVarIsInitialized((Expr.Variable) expr.judge);
+        if (expr.left instanceof Expr.Variable) checkVarIsInitialized((Expr.Variable) expr.left);
+        if (expr.right instanceof Expr.Variable) checkVarIsInitialized((Expr.Variable) expr.right);
 
-        if (isTruthy(judge))
-            return left;
-        else
-            return right;
+        if (isTruthy(judge)) return left;
+        else return right;
     }
+
+    private Object lookUpVariable(Token name, Expr expr)
+    {
+        Integer distance = locals.get(expr);
+        if (distance != null)
+        {
+            return environment.getAt(distance, name.lexeme);
+        } else
+        {
+            return globals.get(name);
+        }
+    }
+
 
     private void checkVarIsInitialized(Expr.Variable var)
     {
@@ -373,34 +384,28 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 
     private void checkNumberOperand(Token operator, Object operand)
     {
-        if (operand instanceof Double)
-            return;
+        if (operand instanceof Double) return;
         throw new RuntimeError(operator, "Operand must be a number.");
     }
 
     private void checkNumberOperands(Token operator, Object left, Object right)
     {
-        if (left instanceof Double && right instanceof Double)
-            return;
+        if (left instanceof Double && right instanceof Double) return;
 
         throw new RuntimeError(operator, "Operands must be numbers.");
     }
 
     private boolean isTruthy(Object object)
     {
-        if (object == null)
-            return false;
-        if (object instanceof Boolean)
-            return (boolean) object;
+        if (object == null) return false;
+        if (object instanceof Boolean) return (boolean) object;
         return true;
     }
 
     private boolean isEqual(Object a, Object b)
     {
-        if (a == null && b == null)
-            return true;
-        if (a == null)
-            return false;
+        if (a == null && b == null) return true;
+        if (a == null) return false;
 
         return a.equals(b);
     }

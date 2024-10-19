@@ -24,8 +24,7 @@ class Environment
         {
             return values.get(name.lexeme);
         }
-        if (enclosing != null)
-            return enclosing.get(name);
+        if (enclosing != null) return enclosing.get(name);
 
         throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
     }
@@ -49,5 +48,29 @@ class Environment
     void define(String name, Object value)
     {
         values.put(name, value);
+    }
+
+    Environment ancestor(int distance)
+    {
+        Environment environment = this;
+        for (int i = 0; i < distance; i++)
+        {
+            assert environment != null;
+            environment = environment.enclosing;
+        }
+
+        return environment;
+    }
+
+    // get and getAt
+    Object getAt(int distance, String name)
+    {
+        return ancestor(distance).values.get(name);
+    }
+
+    // assign and assignAt
+    void assignAt(int distance, Token name, Object value)
+    {
+        ancestor(distance).values.put(name.lexeme, value);
     }
 }
