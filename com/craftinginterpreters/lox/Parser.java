@@ -35,10 +35,9 @@ class Parser
     {
         try
         {
-            if (match(FUN))
-                return function("function");
-            if (match(VAR))
-                return varDeclaration();
+            if (match(CLASS)) return classDeclaration();
+            if (match(FUN)) return function("function");
+            if (match(VAR)) return varDeclaration();
 
             return statement();
         } catch (ParseError error)
@@ -46,6 +45,22 @@ class Parser
             synchronize();
             return null;
         }
+    }
+
+    private Stmt classDeclaration()
+    {
+        Token name = consume(IDENTIFIER, "Expect class name.");
+        consume(LEFT_BRACE, "Expect '{' before class body.");
+
+        List<Stmt.Function> methods = new ArrayList<>();
+        while (!check(RIGHT_BRACE) && !isAtEnd())
+        {
+            methods.add(function("method"));
+        }
+
+        consume(RIGHT_BRACE, "Expect '}' after class body.");
+
+        return new Stmt.Class(name, methods);
     }
 
     private Stmt.Function function(String kind)
@@ -89,20 +104,13 @@ class Parser
 
     private Stmt statement()
     {
-        if (match(BREAK))
-            return breakStatement();
-        if (match(FOR))
-            return forStatement();
-        if (match(WHILE))
-            return whileStatement();
-        if (match(IF))
-            return ifStatement();
-        if (match(PRINT))
-            return printStatement();
-        if (match(RETURN))
-            return returnStatement();
-        if (match(LEFT_BRACE))
-            return new Stmt.Block(block());
+        if (match(BREAK)) return breakStatement();
+        if (match(FOR)) return forStatement();
+        if (match(WHILE)) return whileStatement();
+        if (match(IF)) return ifStatement();
+        if (match(PRINT)) return printStatement();
+        if (match(RETURN)) return returnStatement();
+        if (match(LEFT_BRACE)) return new Stmt.Block(block());
         return expressionStatement();
     }
 
@@ -151,8 +159,7 @@ class Parser
             body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
         }
         // 循环体开始前先判断条件
-        if (condition == null)
-            condition = new Expr.Literal(true);
+        if (condition == null) condition = new Expr.Literal(true);
         body = new Stmt.While(condition, body);
 
         // 有初始化式就在循环体开始前运行一次
@@ -262,7 +269,12 @@ class Parser
             {
                 Token name = ((Expr.Variable) expr).name;
                 return new Expr.Assign(name, value);
+            } else if (expr instanceof Expr.Get)
+            {
+                Expr.Get get = (Expr.Get) expr;
+                return new Expr.Set(get.object, get.name, value);
             }
+
 
             error(equals, "Invalid assignment target.");
         }
@@ -389,6 +401,10 @@ class Parser
             if (match(LEFT_PAREN))
             {
                 expr = finishCall(expr);
+            } else if (match(DOT))
+            {
+                Token name = consume(IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
             } else
             {
                 break;
@@ -426,17 +442,15 @@ class Parser
             throw error(previous(), "Expect expression before binary operator.");
         }
 
-        if (match(FALSE))
-            return new Expr.Literal(false);
-        if (match(TRUE))
-            return new Expr.Literal(true);
-        if (match(NIL))
-            return new Expr.Literal(null);
+        if (match(FALSE)) return new Expr.Literal(false);
+        if (match(TRUE)) return new Expr.Literal(true);
+        if (match(NIL)) return new Expr.Literal(null);
 
         if (match(NUMBER, STRING))
         {
             return new Expr.Literal(previous().literal);
         }
+        if (match(THIS)) return new Expr.This(previous());
         if (match(IDENTIFIER))
         {
             return new Expr.Variable(previous());
@@ -466,23 +480,20 @@ class Parser
 
     private Token consume(TokenType type, String message)
     {
-        if (check(type))
-            return advance();
+        if (check(type)) return advance();
 
         throw error(peek(), message);
     }
 
     private boolean check(TokenType type)
     {
-        if (isAtEnd())
-            return false;
+        if (isAtEnd()) return false;
         return peek().type == type;
     }
 
     private Token advance()
     {
-        if (!isAtEnd())
-            current++;
+        if (!isAtEnd()) current++;
         return previous();
     }
 
@@ -513,8 +524,7 @@ class Parser
 
         while (!isAtEnd())
         {
-            if (previous().type == SEMICOLON)
-                return;
+            if (previous().type == SEMICOLON) return;
 
             switch (peek().type)
             {

@@ -82,17 +82,19 @@
 ### Something interesting
 
 1. 本章解决的问题来源于，在代码实现中通过动态的环境来表示语言中静态的作用域。动态的环境会随着块内代码的执行动态变化，
-但是对于作用域来讲，例如函数的闭包作用域，创建后不应收到后续影响 
+   但是对于作用域来讲，例如函数的闭包作用域，创建后不应收到后续影响
 
-   解决思路：在环境链上遍历相同数量的链接 -> 确保每次都在相同的作用域中寻找变量  
+   解决思路：在环境链上遍历相同数量的链接 -> 确保每次都在相同的作用域中寻找变量
 
    How to implement? (静态的属性当然要依照静态的解析) 在解释器执行语法树之前，遍历一遍语法树来解析变量(又变得像编译器了)
-2. 在新的变量查找方式中，使用了lookUpVariable方法，这个方法的实现依赖于解析器和解释器的耦合 not good(需要断言来辅助) 但是尽可能的在这种累加式的构建中不修改早期实现
+2. 在新的变量查找方式中，使用了lookUpVariable方法，这个方法的实现依赖于解析器和解释器的耦合 not good(需要断言来辅助)
+   但是尽可能的在这种累加式的构建中不修改早期实现
 
 ### Challenges
+
 1. 其他变量得等待初始化，而定义与函数名绑定的变量是安全的? 函数定义实际上是对已存在的代码块的引用，而变量在初始化后才指向具体值
 2. 其他语言对局部变量初始化时使用和该变量同名变量的处理方式
-   
+
    C: UB
 
    Java: 报错
@@ -100,3 +102,22 @@
    JavaScript: 遮蔽原有变量，用原有变量的值赋值
 3. Extension: local var never used is an error
 4. Extension: 创建数组，为作用域中声明的每个局部变量关联一个唯一的索引
+
+## Chapter 12
+
+### Something interesting
+
+1. 将函数作为一等公民会有种种有趣的结果
+2. Power of programming language
+
+   作者提出了这样一个公式 $power = breadth \times ease \div complexity$ breadth is always right?
+
+### Challenges
+
+1. 静态方法 TODO
+2. User-defined getters TODO
+3. 对类的访问权限
+
+   易用性和安全性的权衡？(By asking LLM, there are more answers: 封装性、灵活性、可维护性、开发速度...)
+
+   每个语言解决的需求不同，面向的用户群体不同
