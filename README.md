@@ -121,3 +121,11 @@
    易用性和安全性的权衡？(By asking LLM, there are more answers: 封装性、灵活性、可维护性、开发速度...)
 
    每个语言解决的需求不同，面向的用户群体不同
+
+## Chapter 13
+
+### Challenges
+
+1. single inheritance or multiple inheritance ... TODO
+2. super -> inner TODO
+3. Lox 缺少的功能 TODO

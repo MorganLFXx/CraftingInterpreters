@@ -21,16 +21,18 @@ public class GenerateAst
                                                    "Grouping: Expr expression", "Literal: Object value",
                                                    "Logical  : Expr left, Token operator, Expr right",
                                                    "Set: Expr object, Token name, Expr value", "This: Token keyword",
+                                                   "Super: Token keyword, Token method",
                                                    "Unary: Token operator, Expr right", "Variable : Token name",
                                                    "ThreeWay : Expr judge, Token operator, Expr left, Expr right"));
-        defineAst(outputDir, "Stmt",
-                  Arrays.asList("Block: List<Stmt> statements", "Class: Token name, List<Stmt.Function> methods",
-                                "Expression : Expr expression",
-                                "If: Expr condition, Stmt thenBranch," + " Stmt elseBranch",
-                                "Function: Token name, List<Token> params," + " List<Stmt> body",
-                                "Print: Expr expression", "Return: Token keyword, Expr value",
-                                "While: Expr condition, Stmt body", "Break:Token operator ",
-                                "Var: Token name, Expr initializer"));
+        defineAst(outputDir, "Stmt", Arrays.asList("Block: List<Stmt> statements",
+                                                   "Class: Token name, Expr.Variable superclass," + " List<Stmt" +
+                                                           ".Function> methods",
+                                                   "Expression : Expr expression",
+                                                   "If: Expr condition, Stmt thenBranch," + " Stmt elseBranch",
+                                                   "Function: Token name, List<Token> params," + " List<Stmt> body",
+                                                   "Print: Expr expression", "Return: Token keyword, Expr value",
+                                                   "While: Expr condition, Stmt body", "Break:Token operator ",
+                                                   "Var: Token name, Expr initializer"));
     }
 
     private static void defineAst(String outputDir, String baseName, List<String> types) throws IOException
